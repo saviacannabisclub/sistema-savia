@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Savia Cannabis Club · Sistema de Gestión</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Georgia, serif; background: #f5f0e8; min-height: 100vh; color: #1a1a1a; }
+  :root {
+    --verde: #2D5A27; --verde-osc: #1e3d1a; --verde-med: #3a7232;
+    --verde-claro: #e8f0e6; --crema: #E8DCC8; --crema-osc: #d4c8b0;
+    --crema-suave: #f5f0e8; --rojo: #c0392b; --ambar: #b07d2a; --ambar-claro: #fdf3dc;
+  }
+  #app { max-width: 900px; margin: 0 auto; }
+  .header { background: var(--verde); padding: 14px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .logo { width: 40px; height: 40px; border-radius: 50%; background: var(--verde); border: 2px solid var(--crema); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .logo span { color: var(--crema); font-size: 22px; font-weight: bold; line-height: 1; }
+  .header-title { color: var(--crema); font-size: 20px; font-weight: bold; }
+  .header-sub { color: #E8DCC899; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; font-family: sans-serif; }
+  .nav { background: var(--verde-osc); display: flex; overflow-x: auto; }
+  .nav-btn { background: transparent; color: #E8DCC8bb; border: none; padding: 10px 12px; font-size: 11px; cursor: pointer; white-space: nowrap; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 65px; transition: all .15s; }
+  .nav-btn.active { background: var(--crema); color: var(--verde); font-weight: 700; }
+  .nav-btn .icon { font-size: 15px; }
+  .content { padding: 20px 16px 80px; }
+  .card { background: #fff; border-radius: 12px; border: 1px solid var(--crema-osc); padding: 20px; margin-bottom: 12px; }
+  .card-green { border-left: 4px solid var(--verde-med); }
+  .card-amber { background: var(--ambar-claro); border-left: 4px solid var(--ambar); }
+  .card-red { border-left: 4px solid var(--rojo); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .kpi { background: #fff; border-radius: 12px; border: 1px solid var(--crema-osc); padding: 16px; border-left: 4px solid var(--verde); cursor: pointer; }
+  .kpi-val { font-size: 20px; font-weight: bold; color: var(--verde); margin-top: 4px; }
+  .kpi-label { font-size: 11px; color: #666; margin-top: 2px; font-family: sans-serif; }
+  .btn { background: var(--verde); color: #fff; border: 2px solid var(--verde); border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; }
+  .btn:disabled { background: #ccc; border-color: #ccc; cursor: not-allowed; }
+  .btn.outline { background: transparent; color: var(--verde); }
+  .btn.small { padding: 6px 12px; font-size: 12px; }
+  .btn.red { background: var(--rojo); border-color: var(--rojo); color: #fff; }
+  .btn.red.outline { background: transparent; color: var(--rojo); border-color: var(--rojo); }
+  .btn.amber { background: var(--ambar); border-color: var(--ambar); color: #fff; }
+  .btn.wa { background: #25D366; border-color: #25D366; color: #fff; width: 100%; padding: 12px; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; border-radius: 10px; font-weight: 700; font-family: sans-serif; }
+  .badge { border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 600; white-space: nowrap; font-family: sans-serif; }
+  .badge-green { background: #2D5A2720; color: var(--verde); border: 1px solid #2D5A2740; }
+  .badge-amber { background: #b07d2a20; color: var(--ambar); border: 1px solid #b07d2a40; }
+  .badge-red { background: #c0392b20; color: var(--rojo); border: 1px solid #c0392b40; }
+  .badge-gray { background: #99999920; color: #999; border: 1px solid #99999940; }
+  .badge-blue { background: #1a5c8820; color: #1a5c88; border: 1px solid #1a5c8840; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .form-label { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.5px; font-family: sans-serif; }
+  .form-input { padding: 9px 12px; border: 1px solid var(--crema-osc); border-radius: 8px; font-size: 14px; font-family: inherit; background: var(--crema-suave); color: #1a1a1a; outline: none; width: 100%; }
+  .form-input:focus { border-color: var(--verde); }
+  select.form-input { appearance: auto; }
+  .modal-overlay { position: fixed; inset: 0; background: #00000060; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal-box { background: #fff; border-radius: 16px; padding: 24px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-title { color: var(--verde); font-size: 18px; }
+  .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #555; line-height: 1; }
+  h2.sec { color: var(--verde); font-size: 22px; margin-bottom: 16px; }
+  h3.sub { color: var(--verde); font-size: 15px; margin-bottom: 14px; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .row-wrap { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .col { display: flex; flex-direction: column; gap: 6px; }
+  .divider { border: none; border-top: 1px solid var(--crema-osc); margin: 8px 0; }
+  .comp-header { background: var(--verde); border-radius: 10px; padding: 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .comp-cell { background: var(--crema-suave); border-radius: 8px; padding: 8px 10px; }
+  .comp-lbl { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; font-family: sans-serif; }
+  .comp-val { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .aporte-box { background: var(--verde-claro); border-radius: 10px; padding: 14px; border: 1px solid #2D5A2730; margin-bottom: 16px; }
+  .transfer-box { background: #fff; border: 2px dashed var(--verde); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+  .concept-note { background: var(--ambar-claro); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--ambar); margin-top: 8px; }
+  .egreso-hint { background: #fff0f0; border: 1px solid #c0392b30; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+  .filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filtro-btn { padding: 5px 14px; border-radius: 20px; border: 1px solid var(--crema-osc); background: transparent; color: #1a1a1a; font-size: 12px; cursor: pointer; font-family: sans-serif; }
+  .filtro-btn.active { background: var(--verde); color: #fff; font-weight: 700; border-color: var(--verde); }
+  .hidden { display: none !important; }
+  .info-box { background: var(--verde-claro); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--verde-osc); margin-bottom: 8px; }
+  .warn-box { background: var(--ambar-claro); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--ambar); margin-bottom: 8px; }
+  .saved-toast { color: var(--verde); font-size: 12px; font-style: italic; font-family: sans-serif; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="logo"><span>S</span></div>
+    <div>
+      <div class="header-title">Savia</div>
+      <div class="header-sub">Cannabis Club · Sistema de Gestión</div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="showTab('dashboard')"><span class="icon">🌿</span>Inicio</button>
+    <button class="nav-btn" onclick="showTab('cosechas')"><span class="icon">🌾</span>Cosechas</button>
+    <button class="nav-btn" onclick="showTab('retiros')"><span class="icon">📦</span>Retiros</button>
+    <button class="nav-btn" onclick="showTab('socios')"><span class="icon">👥</span>Socios</button>
+    <button class="nav-btn" onclick="showTab('geneticas')"><span class="icon">🧬</span>Genéticas</button>
+    <button class="nav-btn" onclick="showTab('ingresos')"><span class="icon">💚</span>Ingresos</button>
+    <button class="nav-btn" onclick="showTab('egresos')"><span class="icon">💸</span>Egresos</button>
+    <button class="nav-btn" onclick="showTab('contable')"><span class="icon">📊</span>Contable</button>
+    <button class="nav-btn" onclick="showTab('ajustes')"><span class="icon">⚙️</span>Ajustes</button>
+  </div>
+  <div class="content">
+    <div id="tab-dashboard"></div>
+    <div id="tab-cosechas" class="hidden"></div>
+    <div id="tab-retiros" class="hidden"></div>
+    <div id="tab-socios" class="hidden"></div>
+    <div id="tab-geneticas" class="hidden"></div>
+    <div id="tab-ingresos" class="hidden"></div>
+    <div id="tab-egresos" class="hidden"></div>
+    <div id="tab-contable" class="hidden"></div>
+    <div id="tab-ajustes" class="hidden"></div>
+  </div>
+</div>
+<div id="modal-overlay" class="modal-overlay hidden" onclick="closeModalOnOverlay(event)">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// ESTADO
+// ═══════════════════════════════════════════
+const GESTION_PCT = 0.02;
+
+const DEFAULT_GENETICAS = [
+  {id:1,nombre:"Lemon Cherry Soap",tipo:"Mixta",activa:true},
+  {id:2,nombre:"Lemon Cherry Mintz",tipo:"Mixta",activa:true},
+  {id:3,nombre:"Flava Flab",tipo:"Mixta",activa:true},
+  {id:4,nombre:"Lit OG",tipo:"Mixta",activa:true},
+  {id:5,nombre:"Black Valentine",tipo:"Mixta",activa:true},
+  {id:6,nombre:"Café Americano",tipo:"Mixta",activa:true},
+  {id:7,nombre:"Animal Mint",tipo:"Mixta",activa:true},
+];
+
+const DEFAULT_SOCIOS = [
+  {id:1,numero:'000',nombre:'Socio Demo',dni:'00000000',reprocann:'DEMO-000',tel:'',direccion:'Paraná, Entre Ríos',costoEnvio:0,activo:true,esDemo:true},
+];
+
+function cargar(key, def) {
+  try { const v = localStorage.getItem('savia_'+key); return v ? JSON.parse(v) : def; } catch { return def; }
+}
+function guardar(key, val) {
+  try { localStorage.setItem('savia_'+key, JSON.stringify(val)); } catch {}
+}
+
+let state = {
+  geneticas: cargar('geneticas', DEFAULT_GENETICAS),
+  socios:    cargar('socios', DEFAULT_SOCIOS),
+  cosechas:  cargar('cosechas', []),
+  retiros:   cargar('retiros', []),
+  ingresos:  cargar('ingresos', []),
+  egresos:   cargar('egresos', []),
+  config:    cargar('config', {alias:'',cvu:'',whatsapp:'',banco:'Mercado Pago',valorGramo:10000}),
+  filtroRetiros: 'todos',
+  filtroIngresos: 'todos',
+  filtroEgresos: 'todos',
+  periodoCont: 'todos',
+};
+
+function save(key) { guardar(key, state[key]); }
+function valorPorGramo() { return parseFloat(state.config.valorGramo) || 10000; }
+function siguienteNumeroSocio() {
+  const nums = state.socios.map(s => parseInt(s.numero)||0);
+  return String((nums.length ? Math.max(...nums) : 0)+1).padStart(3,'0');
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+const fmt = n => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(n);
+const fmtFecha = iso => new Date(iso).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+const todayISO = () => new Date().toISOString().split('T')[0];
+
+function calcularAporte(gramos, envio) {
+  const base = gramos * valorPorGramo();
+  const gestion = Math.round(base * GESTION_PCT);
+  const e = envio || 0;
+  return {base, gestion, envio:e, total: base+gestion+e};
+}
+
+function stockPorGenetica() {
+  const s = {};
+  state.geneticas.forEach(g => s[g.id] = 0);
+  state.cosechas.forEach(c => { if(s[c.geneticaId]!==undefined) s[c.geneticaId]+=c.gramos; });
+  state.retiros.filter(r=>r.estado!=='cancelado').forEach(r => { if(s[r.geneticaId]!==undefined) s[r.geneticaId]-=r.gramos; });
+  return s;
+}
+
+function badge(texto, tipo) { return `<span class="badge badge-${tipo}">${texto}</span>`; }
+
+// ═══════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════
+const TABS = ['dashboard','cosechas','retiros','socios','geneticas','ingresos','egresos','contable','ajustes'];
+
+function showTab(tab) {
+  document.querySelectorAll('.nav-btn').forEach((b,i) => b.classList.toggle('active', TABS[i]===tab));
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+  document.getElementById('tab-'+tab).classList.remove('hidden');
+  renderTab(tab);
+}
+
+function renderTab(tab) {
+  const el = document.getElementById('tab-'+tab);
+  const m = {dashboard:renderDashboard,cosechas:renderCosechas,retiros:renderRetiros,
+    socios:renderSocios,geneticas:renderGeneticas,ingresos:renderIngresos,
+    egresos:renderEgresos,contable:renderContable,ajustes:renderAjustes};
+  if(m[tab]) el.innerHTML = m[tab]();
+}
+
+// ═══════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════
+function openModal(html) {
+  document.getElementById('modal-box').innerHTML = html;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  document.getElementById('modal-box').innerHTML = '';
+}
+function closeModalOnOverlay(e) { if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+function renderDashboard() {
+  const stock = stockPorGenetica();
+  const totalStock = Object.values(stock).reduce((a,b)=>a+b,0);
+  const retConf = state.retiros.filter(r=>r.estado==='confirmado');
+  const totalRetiros = retConf.reduce((a,r)=>a+r.aporte.total,0);
+  const totalIngresos = state.ingresos.reduce((a,i)=>a+i.monto,0);
+  const totalEgresos = state.egresos.reduce((a,e)=>a+e.monto,0);
+  const pendientes = state.retiros.filter(r=>r.estado==='pendiente');
+  const saldo = totalRetiros+totalIngresos-totalEgresos;
+
+  const alerta = pendientes.length ? `
+    <div class="card card-amber row" style="margin-bottom:12px">
+      <div>
+        <div style="font-weight:700;color:var(--ambar);font-size:15px">⏳ ${pendientes.length} retiro${pendientes.length>1?'s':''} pendiente${pendientes.length>1?'s':''}</div>
+        <div style="font-size:12px;color:#555;margin-top:4px;font-family:sans-serif">Esperando confirmación de pago</div>
+      </div>
+      <button class="btn amber small" onclick="showTab('retiros')">Ver</button>
+    </div>` : '';
+
+  const stockRows = state.geneticas.filter(g=>g.activa).map(g => {
+    const s = stock[g.id]||0;
+    const col = s<=0?'red':s<10?'amber':'green';
+    return `<div class="row" style="padding:8px 0;border-bottom:1px solid var(--crema-osc)">
+      <span style="font-size:14px">${g.nombre}</span>
+      ${badge(s+'g disponibles',col)}
+    </div>`;
+  }).join('');
+
+  return `
+    <div>
+      <h2 class="sec">Bienvenidos 🌿</h2>
+      <p style="font-size:14px;color:#555;margin-bottom:16px">Panel de gestión · Savia Cannabis Club</p>
+      <div class="grid-2">
+        <div class="kpi" onclick="showTab('socios')">
+          <div style="font-size:18px">👥</div>
+          <div class="kpi-val">${state.socios.filter(s=>s.activo&&!s.esDemo).length}</div>
+          <div class="kpi-label">Socios activos</div>
+        </div>
+        <div class="kpi" onclick="showTab('geneticas')">
+          <div style="font-size:18px">📦</div>
+          <div class="kpi-val">${totalStock}g</div>
+          <div class="kpi-label">Stock total disponible</div>
+        </div>
+        <div class="kpi" onclick="showTab('contable')">
+          <div style="font-size:18px">💰</div>
+          <div class="kpi-val" style="font-size:16px">${fmt(totalRetiros+totalIngresos)}</div>
+          <div class="kpi-label">Total ingresos</div>
+        </div>
+        <div class="kpi" style="border-left-color:${saldo>=0?'var(--verde)':'var(--rojo)'}" onclick="showTab('contable')">
+          <div style="font-size:18px">${saldo>=0?'📈':'📉'}</div>
+          <div class="kpi-val" style="font-size:16px;color:${saldo>=0?'var(--verde)':'var(--rojo)'}">${fmt(saldo)}</div>
+          <div class="kpi-label">Saldo neto</div>
+        </div>
+      </div>
+      ${alerta}
+      <div class="card">
+        <h3 class="sub">Stock por Genética</h3>
+        ${stockRows||'<p style="font-size:13px;color:#555">Sin genéticas activas.</p>'}
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// COSECHAS
+// ═══════════════════════════════════════════
+function renderCosechas() {
+  const rows = state.cosechas.slice().reverse().map(c => `
+    <div class="card card-green">
+      <div class="row" style="align-items:flex-start">
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:16px;color:var(--verde)">${c.geneticaNombre}</div>
+          <div style="font-size:12px;color:#555;margin-top:4px">Lote: <strong>${c.lote}</strong> · ${fmtFecha(c.fecha)}</div>
+          ${c.notas?`<div style="font-size:12px;color:#555;margin-top:4px;font-style:italic">${c.notas}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:bold;color:var(--verde)">${c.gramos}g</div>
+          <div style="font-size:11px;color:#555">cosechados</div>
+          <div class="row-wrap" style="justify-content:flex-end;margin-top:8px">
+            <button class="btn outline small" onclick="editarCosecha(${c.id})">✏️</button>
+            <button class="btn red outline small" onclick="eliminarCosecha(${c.id})">🗑</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('') || '<div class="card"><p style="font-size:13px;color:#555">No hay cosechas registradas.</p></div>';
+  return `
+    <div class="row" style="margin-bottom:16px">
+      <h2 class="sec" style="margin:0">Cosechas 🌾</h2>
+      <button class="btn" onclick="nuevaCosecha()">+ Nueva cosecha</button>
+    </div>${rows}`;
+}
+
+function nuevaCosecha() { abrirModalCosecha(null); }
+function editarCosecha(id) { abrirModalCosecha(state.cosechas.find(c=>c.id===id)); }
+
+function abrirModalCosecha(c) {
+  const opts = state.geneticas.filter(g=>g.activa).map(g=>
+    `<option value="${g.id}" ${c&&c.geneticaId===g.id?'selected':''}>${g.nombre}</option>`).join('');
+  openModal(`
+    <div class="modal-header">
+      <h3 class="modal-title">${c?'Editar':'Registrar'} Cosecha</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Genética</label>
+      <select id="c-gen" class="form-input"><option value="">Seleccionar...</option>${opts}</select></div>
+    <div class="form-group"><label class="form-label">Gramos cosechados</label>
+      <input id="c-gramos" type="number" class="form-input" value="${c?c.gramos:''}" placeholder="ej: 150"></div>
+    <div class="form-group"><label class="form-label">Número de lote (opcional)</label>
+      <input id="c-lote" class="form-input" value="${c?c.lote:''}" placeholder="Se genera automáticamente"></div>
+    <div class="form-group"><label class="form-label">Fecha</label>
+      <input id="c-fecha" type="date" class="form-input" value="${c?c.fecha:todayISO()}"></div>
+    <div class="form-group"><label class="form-label">Notas</label>
+      <input id="c-notas" class="form-input" value="${c?c.notas||'':''}" placeholder="Opcional"></div>
+    <button class="btn" style="width:100%" onclick="guardarCosecha(${c?c.id:'null'})">${c?'Guardar cambios':'Registrar cosecha'}</button>
+  `);
+}
+
+function guardarCosecha(id) {
+  const genId = parseInt(document.getElementById('c-gen').value);
+  const gramos = parseFloat(document.getElementById('c-gramos').value);
+  if(!genId||!gramos){alert('Completá genética y gramos');return;}
+  const g = state.geneticas.find(x=>x.id===genId);
+  const lote = document.getElementById('c-lote').value||`L${Date.now().toString().slice(-6)}`;
+  const obj = {geneticaId:genId,geneticaNombre:g.nombre,gramos,lote,
+    fecha:document.getElementById('c-fecha').value,notas:document.getElementById('c-notas').value};
+  if(id) { state.cosechas=state.cosechas.map(c=>c.id===id?{...c,...obj}:c); }
+  else { state.cosechas.push({id:Date.now(),...obj}); }
+  save('cosechas'); closeModal(); renderTab('cosechas');
+}
+
+function eliminarCosecha(id) {
+  if(!confirm('¿Eliminar esta cosecha?'))return;
+  state.cosechas=state.cosechas.filter(c=>c.id!==id);
+  save('cosechas'); renderTab('cosechas');
+}
+
+// ═══════════════════════════════════════════
+// RETIROS DE MATERIAL
+// ═══════════════════════════════════════════
+function renderRetiros() {
+  const filtro = state.filtroRetiros;
+  const filtrados = state.retiros.filter(r=>filtro==='todos'||r.estado===filtro).slice().reverse();
+  const fBtns = ['todos','pendiente','confirmado','cancelado'].map(f=>
+    `<button class="filtro-btn ${filtro===f?'active':''}" onclick="state.filtroRetiros='${f}';renderTab('retiros')">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('');
+
+  const rows = filtrados.map(r=>{
+    const col=r.estado==='confirmado'?'var(--verde)':r.estado==='pendiente'?'var(--ambar)':'#ccc';
+    return `
+      <div class="card" style="border-left:4px solid ${col};margin-bottom:10px">
+        <div class="row" style="align-items:flex-start;gap:8px">
+          <div style="flex:1">
+            <div class="row-wrap" style="margin-bottom:4px">
+              <span style="font-weight:700;font-size:15px">${r.socioNombre}</span>
+              ${badge(r.estado==='confirmado'?'✓ Confirmado':r.estado==='pendiente'?'⏳ Pendiente':'✗ Cancelado',
+                r.estado==='confirmado'?'green':r.estado==='pendiente'?'amber':'gray')}
+            </div>
+            <div style="font-size:12px;color:#555">${r.geneticaNombre} · <strong>${r.gramos}g</strong> · Lote ${r.lote}</div>
+            <div style="font-size:11px;color:#555">${fmtFecha(r.fecha)} · ${fmt(r.aporte.total)}</div>
+          </div>
+          <div class="row-wrap" style="justify-content:flex-end;flex-shrink:0">
+            <button class="btn outline small" onclick="verComprobante(${r.id})">Ver</button>
+            ${r.estado==='pendiente'?`
+              <button class="btn small" onclick="confirmarRetiro(${r.id})">✓</button>
+              <button class="btn red small" onclick="cancelarRetiro(${r.id})">✗</button>`:''}
+          </div>
+        </div>
+      </div>`;
+  }).join('')||'<div class="card"><p style="font-size:13px;color:#555">No hay retiros en esta categoría.</p></div>';
+
+  return `
+    <div class="row" style="margin-bottom:16px">
+      <h2 class="sec" style="margin:0">Retiros de Material 📦</h2>
+      <button class="btn" onclick="nuevoRetiro()">+ Nuevo retiro</button>
+    </div>
+    <div class="filtros">${fBtns}</div>${rows}`;
+}
+
+function nuevoRetiro() {
+  const stock = stockPorGenetica();
+  const socOpts = state.socios.filter(s=>s.activo).map(s=>
+    `<option value="${s.id}">#${s.numero} ${s.nombre}</option>`).join('');
+  const genOpts = state.geneticas.filter(g=>g.activa).map(g=>{
+    const s=stock[g.id]||0;
+    const dis=s<=0?' — sin stock':` · ${s}g disponibles`;
+    return `<option value="${g.id}" ${s<=0?'disabled':''}>${g.nombre}${dis}</option>`;
+  }).join('');
+  openModal(`
+    <div class="modal-header">
+      <h3 class="modal-title">Nuevo Retiro</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Socio</label>
+      <select id="r-socio" class="form-input" onchange="actualizarInfoSocio()">
+        <option value="">Seleccionar socio...</option>${socOpts}</select></div>
+    <div id="r-socio-info"></div>
+    <div class="form-group"><label class="form-label">Genética y stock disponible</label>
+      <select id="r-gen" class="form-input" onchange="actualizarStockInfo()">
+        <option value="">Seleccionar genética...</option>${genOpts}</select></div>
+    <div id="r-stock-info"></div>
+    <div class="form-group"><label class="form-label">Gramos a retirar</label>
+      <input id="r-gramos" type="number" class="form-input" placeholder="ej: 10" oninput="actualizarAporte()"></div>
+    <div id="r-aporte"></div>
+    <button class="btn" style="width:100%;margin-top:8px" onclick="crearRetiro()">Generar retiro y comprobante</button>
+  `);
+}
+
+function actualizarInfoSocio() {
+  const id=parseInt(document.getElementById('r-socio').value);
+  const s=state.socios.find(x=>x.id===id);
+  document.getElementById('r-socio-info').innerHTML=s?
+    `<div class="info-box">📍 ${s.direccion} · Costo de envío: ${fmt(s.costoEnvio)}</div>`:'';
+  actualizarAporte();
+}
+
+function actualizarStockInfo() {
+  const genId=parseInt(document.getElementById('r-gen').value);
+  const stock=stockPorGenetica();
+  const s=stock[genId]||0;
+  const el=document.getElementById('r-stock-info');
+  if(!genId){el.innerHTML='';return;}
+  const col=s<=0?'var(--rojo)':s<10?'var(--ambar)':'var(--verde)';
+  el.innerHTML=`<div style="background:${col}18;border:1px solid ${col}40;border-radius:8px;padding:8px 12px;font-size:13px;color:${col};margin-bottom:8px;font-family:sans-serif;font-weight:600">
+    📦 Disponible: ${s}g</div>`;
+  actualizarAporte();
+}
+
+function actualizarAporte() {
+  const socioId=parseInt(document.getElementById('r-socio')?.value);
+  const gramos=parseFloat(document.getElementById('r-gramos')?.value);
+  const s=state.socios.find(x=>x.id===socioId);
+  const el=document.getElementById('r-aporte');
+  if(!el||!gramos||gramos<=0){if(el)el.innerHTML='';return;}
+  const a=calcularAporte(gramos,s?.costoEnvio);
+  el.innerHTML=`
+    <div class="aporte-box">
+      <div style="font-weight:700;color:var(--verde);font-size:13px;margin-bottom:8px">Detalle del aporte</div>
+      <div class="row" style="font-size:13px;margin-bottom:4px"><span style="color:#555">Material (${gramos}g × ${fmt(valorPorGramo())})</span><span>${fmt(a.base)}</span></div>
+      <div class="row" style="font-size:13px;margin-bottom:4px"><span style="color:#555">Gestión 2%</span><span>${fmt(a.gestion)}</span></div>
+      <div class="row" style="font-size:13px;margin-bottom:4px"><span style="color:#555">Envío</span><span>${fmt(a.envio)}</span></div>
+      <hr class="divider">
+      <div class="row" style="font-weight:700;color:var(--verde);font-size:15px"><span>TOTAL</span><span>${fmt(a.total)}</span></div>
+    </div>`;
+}
+
+function crearRetiro() {
+  const socioId=parseInt(document.getElementById('r-socio').value);
+  const genId=parseInt(document.getElementById('r-gen').value);
+  const gramos=parseFloat(document.getElementById('r-gramos').value);
+  if(!socioId||!genId||!gramos){alert('Completá todos los campos');return;}
+  const stock=stockPorGenetica();
+  if((stock[genId]||0)<gramos){alert('Stock insuficiente para esta genética');return;}
+  const s=state.socios.find(x=>x.id===socioId);
+  const g=state.geneticas.find(x=>x.id===genId);
+  const nuevo={id:Date.now(),fecha:new Date().toISOString(),estado:'pendiente',
+    socioId:s.id,socioNombre:s.nombre,socioNumero:s.numero,socioTel:s.tel,socioDireccion:s.direccion,
+    geneticaId:g.id,geneticaNombre:g.nombre,gramos,
+    aporte:calcularAporte(gramos,s.costoEnvio),
+    lote:`R${Date.now().toString().slice(-6)}`};
+  state.retiros.push(nuevo);
+  save('retiros'); closeModal(); renderTab('retiros');
+  setTimeout(()=>verComprobante(nuevo.id),100);
+}
+
+function confirmarRetiro(id) {
+  state.retiros=state.retiros.map(r=>r.id===id?{...r,estado:'confirmado',fechaConfirmacion:new Date().toISOString()}:r);
+  save('retiros'); renderTab('retiros');
+}
+
+function cancelarRetiro(id) {
+  if(!confirm('¿Cancelar este retiro?'))return;
+  state.retiros=state.retiros.map(r=>r.id===id?{...r,estado:'cancelado'}:r);
+  save('retiros'); renderTab('retiros');
+}
+
+function verComprobante(id) {
+  const r=state.retiros.find(x=>x.id===id); if(!r)return;
+  const cfg=state.config;
+  const msg=`Hola! Soy ${r.socioNombre} (Socio #${r.socioNumero||''}). Adjunto comprobante de transferencia para el retiro N° ${r.lote}.\nMonto: ${fmt(r.aporte.total)}\nGenética: ${r.geneticaNombre} (${r.gramos}g)`;
+  const waUrl=`https://wa.me/${(cfg.whatsapp||'').replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
+  const bEst=badge(r.estado==='confirmado'?'✓ Confirmado':r.estado==='pendiente'?'⏳ Pendiente':'✗ Cancelado',
+    r.estado==='confirmado'?'green':r.estado==='pendiente'?'amber':'gray');
+  openModal(`
+    <div class="modal-header">
+      <h3 class="modal-title">Comprobante · ${r.lote}</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="comp-header">
+      <div class="logo"><span>S</span></div>
+      <div>
+        <div style="color:var(--crema);font-size:18px;font-weight:bold">Savia Cannabis Club</div>
+        <div style="color:#E8DCC899;font-size:11px;letter-spacing:1px;font-family:sans-serif">COMPROBANTE DE RETIRO</div>
+      </div>
+    </div>
+    <div class="comp-grid">
+      ${[['N° retiro',r.lote],['Fecha',fmtFecha(r.fecha)],['Socio',`#${r.socioNumero||''} ${r.socioNombre}`],
+        ['Genética',r.geneticaNombre],['Cantidad',r.gramos+'g'],['Estado',bEst]].map(([k,v])=>
+        `<div class="comp-cell"><div class="comp-lbl">${k}</div><div class="comp-val">${v}</div></div>`).join('')}
+    </div>
+    <div class="aporte-box">
+      <div style="font-weight:700;color:var(--verde);font-size:13px;margin-bottom:8px">Detalle del aporte</div>
+      <div class="row" style="font-size:13px;margin-bottom:4px"><span style="color:#555">Material (${r.gramos}g)</span><span style="font-weight:600">${fmt(r.aporte.base)}</span></div>
+      <div class="row" style="font-size:13px;margin-bottom:4px"><span style="color:#555">Gastos de gestión 2%</span><span style="font-weight:600">${fmt(r.aporte.gestion)}</span></div>
+      <div class="row" style="font-size:13px;margin-bottom:4px"><span style="color:#555">Costo de envío</span><span style="font-weight:600">${fmt(r.aporte.envio)}</span></div>
+      <hr class="divider">
+      <div class="row" style="font-weight:700;color:var(--verde);font-size:18px"><span>TOTAL A TRANSFERIR</span><span>${fmt(r.aporte.total)}</span></div>
+    </div>
+    <div class="transfer-box">
+      <div style="font-weight:700;color:var(--verde);font-size:13px;margin-bottom:10px">💳 Datos para transferir</div>
+      <div class="row" style="font-size:13px;margin-bottom:6px"><span style="color:#555">Billetera</span><strong>${cfg.banco||'Mercado Pago'}</strong></div>
+      <div class="row" style="font-size:13px;margin-bottom:6px"><span style="color:#555">Alias</span><strong>${cfg.alias||'— configurar en Ajustes'}</strong></div>
+      <div class="row" style="font-size:13px;margin-bottom:6px"><span style="color:#555">CVU</span><strong style="word-break:break-all;text-align:right;max-width:60%">${cfg.cvu||'— configurar en Ajustes'}</strong></div>
+      <div class="concept-note">⚠️ Indicar en el concepto: <strong>${r.lote}</strong></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${cfg.whatsapp?`<a href="${waUrl}" target="_blank" class="wa">💬 Enviar comprobante por WhatsApp</a>`:'<div class="warn-box">Configurá WhatsApp en Ajustes para habilitar este botón.</div>'}
+      ${r.estado==='pendiente'?`<button class="btn" style="width:100%" onclick="confirmarRetiro(${r.id});closeModal();renderTab('retiros')">✓ Confirmar pago recibido</button>`:''}
+      <button class="btn outline" style="width:100%" onclick="closeModal()">Cerrar</button>
+    </div>
+  `);
+}
+
+// ═══════════════════════════════════════════
+// SOCIOS
+// ═══════════════════════════════════════════
+function renderSocios() {
+  const rows = state.socios.map(s=>{
+    const ret=state.retiros.filter(r=>r.socioId===s.id&&r.estado==='confirmado');
+    const totalAp=ret.reduce((a,r)=>a+r.aporte.total,0);
+    return `
+      <div class="card" style="opacity:${s.activo?1:0.6};margin-bottom:10px">
+        <div class="row" style="align-items:flex-start;gap:8px">
+          <div style="flex:1">
+            <div class="row-wrap" style="margin-bottom:4px">
+              <span style="font-weight:700;font-size:15px">${s.nombre}</span>
+              <span style="font-size:12px;color:#888;font-family:sans-serif">#${s.numero||'000'}</span>
+              ${badge(s.activo?'Activo':'Inactivo',s.activo?'green':'gray')}
+              ${s.esDemo?badge('Demo','amber'):''}
+            </div>
+            <div style="font-size:12px;color:#555">REPROCANN (Código de vinculación): <strong>${s.reprocann}</strong> · DNI: ${s.dni}</div>
+            <div style="font-size:12px;color:#555">📍 ${s.direccion} · Envío: ${fmt(s.costoEnvio)}</div>
+            <div style="font-size:12px;color:#555">📱 ${s.tel||'—'} · ${ret.length} retiros · ${fmt(totalAp)} aportado</div>
+          </div>
+          <div class="col" style="flex-shrink:0">
+            <button class="btn outline small" onclick="editarSocio(${s.id})">Editar</button>
+            <button class="btn outline small ${s.activo?'red':''}" onclick="toggleSocio(${s.id})">${s.activo?'Pausar':'Activar'}</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('')||'<div class="card"><p style="font-size:13px;color:#555">No hay socios.</p></div>';
+  return `
+    <div class="row" style="margin-bottom:16px">
+      <h2 class="sec" style="margin:0">Socios 👥</h2>
+      <button class="btn" onclick="nuevoSocio()">+ Agregar socio</button>
+    </div>${rows}`;
+}
+
+function nuevoSocio() { abrirModalSocio(null); }
+function editarSocio(id) { abrirModalSocio(state.socios.find(s=>s.id===id)); }
+
+function abrirModalSocio(s) {
+  openModal(`
+    <div class="modal-header">
+      <h3 class="modal-title">${s?'Editar Socio':'Nuevo Socio'}</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    ${!s?`<div class="info-box" style="margin-bottom:4px">Se asignará el número <strong>#${siguienteNumeroSocio()}</strong> automáticamente.</div>`:''}
+    <div class="form-group"><label class="form-label">Nombre completo</label>
+      <input id="s-nombre" class="form-input" value="${s?s.nombre:''}"></div>
+    <div class="form-group"><label class="form-label">DNI</label>
+      <input id="s-dni" class="form-input" value="${s?s.dni:''}"></div>
+    <div class="form-group"><label class="form-label">REPROCANN (Código de vinculación)</label>
+      <input id="s-reprocann" class="form-input" value="${s?s.reprocann:''}"></div>
+    <div class="form-group"><label class="form-label">Teléfono WhatsApp</label>
+      <input id="s-tel" class="form-input" placeholder="ej: 3434123456" value="${s?s.tel:''}"></div>
+    <div class="form-group"><label class="form-label">Dirección de entrega</label>
+      <input id="s-dir" class="form-input" value="${s?s.direccion:''}"></div>
+    <div class="form-group"><label class="form-label">Costo de envío (ARS)</label>
+      <input id="s-envio" type="number" class="form-input" placeholder="ej: 3000" value="${s?s.costoEnvio:''}"></div>
+    <button class="btn" style="width:100%" onclick="guardarSocio(${s?s.id:'null'})">${s?'Guardar cambios':'Agregar socio'}</button>
+  `);
+}
+
+function guardarSocio(id) {
+  const nombre=document.getElementById('s-nombre').value.trim();
+  const reprocann=document.getElementById('s-reprocann').value.trim();
+  if(!nombre||!reprocann){alert('Nombre y REPROCANN son obligatorios');return;}
+  const datos={nombre,reprocann,
+    dni:document.getElementById('s-dni').value.trim(),
+    tel:document.getElementById('s-tel').value.trim(),
+    direccion:document.getElementById('s-dir').value.trim(),
+    costoEnvio:parseFloat(document.getElementById('s-envio').value)||0};
+  if(id){state.socios=state.socios.map(s=>s.id===id?{...s,...datos}:s);}
+  else{state.socios.push({id:Date.now(),numero:siguienteNumeroSocio(),activo:true,...datos});}
+  save('socios'); closeModal(); renderTab('socios');
+}
+
+function toggleSocio(id) {
+  state.socios=state.socios.map(s=>s.id===id?{...s,activo:!s.activo}:s);
+  save('socios'); renderTab('socios');
+}
+
+// ═══════════════════════════════════════════
+// GENÉTICAS
+// ═══════════════════════════════════════════
+function renderGeneticas() {
+  const stock=stockPorGenetica();
+  const rows=state.geneticas.map(g=>{
+    const s=stock[g.id]||0;
+    const col=s<=0?'red':s<10?'amber':'green';
+    return `
+      <div class="card" style="opacity:${g.activa?1:0.6};margin-bottom:10px">
+        <div class="row">
+          <div>
+            <div style="font-weight:700;font-size:15px;color:var(--verde)">${g.nombre}</div>
+            <div style="font-size:12px;color:#555;margin-top:4px">${g.tipo} · ${badge(s+'g disponibles',col)}</div>
+          </div>
+          <div class="row-wrap">
+            ${badge(g.activa?'Activa':'Inactiva',g.activa?'green':'gray')}
+            <button class="btn outline small ${g.activa?'red':''}" onclick="toggleGenetica(${g.id})">${g.activa?'Pausar':'Activar'}</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  return `
+    <div class="row" style="margin-bottom:16px">
+      <h2 class="sec" style="margin:0">Genéticas 🧬</h2>
+      <button class="btn" onclick="nuevaGenetica()">+ Agregar</button>
+    </div>${rows}`;
+}
+
+function nuevaGenetica() {
+  openModal(`
+    <div class="modal-header">
+      <h3 class="modal-title">Nueva Genética</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Nombre</label>
+      <input id="g-nombre" class="form-input" placeholder="ej: Blue Dream"></div>
+    <div class="form-group"><label class="form-label">Tipo</label>
+      <select id="g-tipo" class="form-input">
+        <option value="Indica">Indica</option><option value="Sativa">Sativa</option>
+        <option value="Mixta" selected>Mixta</option><option value="CBD">Alto CBD</option>
+      </select></div>
+    <button class="btn" style="width:100%" onclick="guardarGenetica()">Agregar</button>
+  `);
+}
+
+function guardarGenetica() {
+  const nombre=document.getElementById('g-nombre').value.trim();
+  if(!nombre){alert('Ingresá el nombre');return;}
+  state.geneticas.push({id:Date.now(),nombre,tipo:document.getElementById('g-tipo').value,activa:true});
+  save('geneticas'); closeModal(); renderTab('geneticas');
+}
+
+function toggleGenetica(id) {
+  state.geneticas=state.geneticas.map(g=>g.id===id?{...g,activa:!g.activa}:g);
+  save('geneticas'); renderTab('geneticas');
+}
+
+// ═══════════════════════════════════════════
+// INGRESOS
+// ═══════════════════════════════════════════
+const TIPOS_INGRESO=['Cuota social','Donación en efectivo','Donación en especie','Abono especial','Capacitación / Evento','Otro'];
+
+function renderIngresos() {
+  const filtro=state.filtroIngresos;
+  const items=(filtro==='todos'?state.ingresos:state.ingresos.filter(i=>i.tipo===filtro)).slice().reverse();
+  const total=state.ingresos.reduce((a,i)=>a+i.monto,0);
+  const fBtns=['todos',...TIPOS_INGRESO].map(f=>
+    `<button class="filtro-btn ${filtro===f?'active':''}" onclick="state.filtroIngresos='${f}';renderTab('ingresos')">${f==='todos'?'Todos':f}</button>`).join('');
+
+  const rows=items.map(i=>`
+    <div class="card card-green" style="margin-bottom:10px">
+      <div class="row" style="align-items:flex-start">
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:15px">${i.concepto}</div>
+          <div style="font-size:12px;color:#555;margin-top:4px">${i.tipo} · ${fmtFecha(i.fecha)}</div>
+          ${i.socioNombre?`<div style="font-size:12px;color:#555">👤 ${i.socioNombre}</div>`:''}
+          ${i.notas?`<div style="font-size:12px;color:#555;font-style:italic">${i.notas}</div>`:''}
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:20px;font-weight:bold;color:var(--verde)">${fmt(i.monto)}</div>
+          <button class="btn red outline small" style="margin-top:8px" onclick="eliminarIngreso(${i.id})">🗑</button>
+        </div>
+      </div>
+    </div>`).join('')||'<div class="card"><p style="font-size:13px;color:#555">No hay ingresos registrados.</p></div>';
+
+  return `
+    <div class="row" style="margin-bottom:8px">
+      <h2 class="sec" style="margin:0">Ingresos 💚</h2>
+      <button class="btn" onclick="nuevoIngreso()">+ Registrar</button>
+    </div>
+    <div class="card" style="margin-bottom:12px;border-left:4px solid var(--verde)">
+      <div style="font-size:13px;color:#555">Total registrado</div>
+      <div style="font-size:22px;font-weight:bold;color:var(--verde)">${fmt(total)}</div>
+    </div>
+    <div class="filtros">${fBtns}</div>${rows}`;
+}
+
+function nuevoIngreso() {
+  const socOpts=state.socios.filter(s=>s.activo).map(s=>
+    `<option value="${s.id}">#${s.numero} ${s.nombre}</option>`).join('');
+  const tiposOpts=TIPOS_INGRESO.map(t=>`<option value="${t}">${t}</option>`).join('');
+  openModal(`
+    <div class="modal-header">
+      <h3 class="modal-title">Registrar Ingreso</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Tipo</label>
+      <select id="i-tipo" class="form-input">${tiposOpts}</select></div>
+    <div class="form-group"><label class="form-label">Concepto / Descripción</label>
+      <input id="i-concepto" class="form-input" placeholder="ej: Cuota abril - Juan Pérez"></div>
+    <div class="form-group"><label class="form-label">Monto (ARS)</label>
+      <input id="i-monto" type="number" class="form-input" placeholder="ej: 5000"></div>
+    <div class="form-group"><label class="form-label">Socio (opcional)</label>
+      <select id="i-socio" class="form-input">
+        <option value="">Sin socio asociado</option>${socOpts}</select></div>
+    <div class="form-group"><label class="form-label">Fecha</label>
+      <input id="i-fecha" type="date" class="form-input" value="${todayISO()}"></div>
+    <div class="form-group"><label class="form-label">Notas (opcional)</label>
+      <input id="i-notas" class="form-input" placeholder="Detalles adicionales"></div>
+    <button class="btn" style="width:100%" onclick="guardarIngreso()">Registrar ingreso</button>
+  `);
+}
+
+function guardarIngreso() {
+  const concepto=document.getElementById('i-concepto').value.trim();
+  const monto=parseFloat(document.getElementById('i-monto').value);
+  if(!concepto||!monto){alert('Completá concepto y monto');return;}
+  const socioId=parseInt(document.getElementById('i-socio').value);
+  const socio=state.socios.find(s=>s.id===socioId);
+  state.ingresos.push({id:Date.now(),tipo:document.getElementById('i-tipo').value,
+    concepto,monto,socioId:socioId||null,socioNombre:socio?socio.nombre:null,
+    fecha:document.getElementById('i-fecha').value,notas:document.getElementById('i-notas').value});
+  save('ingresos'); closeModal(); renderTab('ingresos');
+}
+
+function eliminarIngreso(id) {
+  if(!confirm('¿Eliminar este ingreso?'))return;
+  state.ingresos=state.ingresos.filter(i=>i.id!==id);
+  save('ingresos'); renderTab('ingresos');
+}
+
+// ═══════════════════════════════════════════
+// EGRESOS
+// ═══════════════════════════════════════════
+const TIPOS_EGRESO=['Insumos de cultivo','Insumos de elaboración','Alquiler / Sede','Servicios','Personal / Honorarios','Gastos administrativos','Retiro de fondos','Otro'];
+
+function renderEgresos() {
+  const filtro=state.filtroEgresos;
+  const items=(filtro==='todos'?state.egresos:state.egresos.filter(e=>e.tipo===filtro)).slice().reverse();
+  const total=state.egresos.reduce((a,e)=>a+e.monto,0);
+  const fBtns=['todos',...TIPOS_EGRESO].map(f=>
+    `<button class="filtro-btn ${filtro===f?'active':''}" onclick="state.filtroEgresos='${f}';renderTab('egresos')">${f==='todos'?'Todos':f}</button>`).join('');
+
+  const rows=items.map(e=>`
+    <div class="card card-red" style="margin-bottom:10px">
+      <div class="row" style="align-items:flex-start">
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:15px">${e.concepto}</div>
+          <div style="font-size:12px;color:#555;margin-top:4px">${e.tipo} · ${fmtFecha(e.fecha)}</div>
+          ${e.responsable?`<div style="font-size:12px;color:#555">👤 ${e.responsable}</div>`:''}
+          ${e.comprobante?`<div style="font-size:12px;color:var(--verde)">📄 Comprobante N°: ${e.comprobante}</div>`:''}
+          ${e.notas?`<div style="font-size:12px;color:#555;font-style:italic">${e.notas}</div>`:''}
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:20px;font-weight:bold;color:var(--rojo)">-${fmt(e.monto)}</div>
+          <button class="btn red outline small" style="margin-top:8px" onclick="eliminarEgreso(${e.id})">🗑</button>
+        </div>
+      </div>
+    </div>`).join('')||'<div class="card"><p style="font-size:13px;color:#555">No hay egresos registrados.</p></div>';
+
+  return `
+    <div class="row" style="margin-bottom:8px">
+      <h2 class="sec" style="margin:0">Egresos 💸</h2>
+      <button class="btn" onclick="nuevoEgreso()">+ Registrar</button>
+    </div>
+    <div class="card" style="margin-bottom:12px;border-left:4px solid var(--rojo)">
+      <div style="font-size:13px;color:#555">Total registrado</div>
+      <div style="font-size:22px;font-weight:bold;color:var(--rojo)">-${fmt(total)}</div>
+    </div>
+    <div class="filtros">${fBtns}</div>${rows}`;
+}
+
+function nuevoEgreso() {
+  const tiposOpts=TIPOS_EGRESO.map(t=>`<option value="${t}">${t}</option>`).join('');
+  openModal(`
+    <div class="modal-header">
+      <h3 class="modal-title">Registrar Egreso / Retiro de Fondos</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="egreso-hint">
+      <div style="font-size:12px;color:var(--rojo);font-weight:600">📋 Para retiro de fondos</div>
+      <div style="font-size:12px;color:#555;margin-top:4px">Seleccioná "Retiro de fondos", completá el responsable y el concepto con el mayor detalle posible. Esto es clave para la trazabilidad contable.</div>
+    </div>
+    <div class="form-group"><label class="form-label">Tipo de egreso</label>
+      <select id="e-tipo" class="form-input">${tiposOpts}</select></div>
+    <div class="form-group"><label class="form-label">Concepto / Descripción detallada</label>
+      <input id="e-concepto" class="form-input" placeholder="ej: Compra nutrientes marzo - Growshop X"></div>
+    <div class="form-group"><label class="form-label">Monto (ARS)</label>
+      <input id="e-monto" type="number" class="form-input" placeholder="ej: 15000"></div>
+    <div class="form-group"><label class="form-label">Responsable (quien pagó o retiró)</label>
+      <input id="e-resp" class="form-input" placeholder="Nombre completo"></div>
+    <div class="form-group"><label class="form-label">N° comprobante (factura, ticket, recibo)</label>
+      <input id="e-comp" class="form-input" placeholder="Recomendado para trazabilidad"></div>
+    <div class="form-group"><label class="form-label">Fecha</label>
+      <input id="e-fecha" type="date" class="form-input" value="${todayISO()}"></div>
+    <div class="form-group"><label class="form-label">Notas adicionales</label>
+      <input id="e-notas" class="form-input" placeholder="Proveedor, destino, detalle, etc."></div>
+    <button class="btn" style="width:100%" onclick="guardarEgreso()">Registrar egreso</button>
+  `);
+}
+
+function guardarEgreso() {
+  const concepto=document.getElementById('e-concepto').value.trim();
+  const monto=parseFloat(document.getElementById('e-monto').value);
+  if(!concepto||!monto){alert('Completá concepto y monto');return;}
+  state.egresos.push({id:Date.now(),tipo:document.getElementById('e-tipo').value,
+    concepto,monto,responsable:document.getElementById('e-resp').value.trim(),
+    comprobante:document.getElementById('e-comp').value.trim(),
+    fecha:document.getElementById('e-fecha').value,notas:document.getElementById('e-notas').value});
+  save('egresos'); closeModal(); renderTab('egresos');
+}
+
+function eliminarEgreso(id) {
+  if(!confirm('¿Eliminar este egreso?'))return;
+  state.egresos=state.egresos.filter(e=>e.id!==id);
+  save('egresos'); renderTab('egresos');
+}
+
+// ═══════════════════════════════════════════
+// CONTABLE
+// ═══════════════════════════════════════════
+function renderContable() {
+  const ahora=new Date();
+  const periodo=state.periodoCont;
+  const filtrar=items=>{
+    if(periodo==='todos')return items;
+    return items.filter(i=>{
+      const f=new Date(i.fecha);
+      if(periodo==='mes')return f.getMonth()===ahora.getMonth()&&f.getFullYear()===ahora.getFullYear();
+      if(periodo==='año')return f.getFullYear()===ahora.getFullYear();
+      return true;
+    });
+  };
+  const retConf=filtrar(state.retiros.filter(r=>r.estado==='confirmado'));
+  const ingrF=filtrar(state.ingresos);
+  const egrF=filtrar(state.egresos);
+  const totalRetiros=retConf.reduce((a,r)=>a+r.aporte.total,0);
+  const totalIngresos=ingrF.reduce((a,i)=>a+i.monto,0);
+  const totalEgresos=egrF.reduce((a,e)=>a+e.monto,0);
+  const totalGramos=retConf.reduce((a,r)=>a+r.gramos,0);
+  const saldo=totalRetiros+totalIngresos-totalEgresos;
+
+  const movs=[
+    ...retConf.map(r=>({fecha:r.fecha,desc:`Aporte retiro · ${r.socioNombre} · ${r.geneticaNombre} ${r.gramos}g`,monto:r.aporte.total,tipo:'ingreso',sub:'Aporte por retiro'})),
+    ...ingrF.map(i=>({fecha:i.fecha,desc:i.concepto,monto:i.monto,tipo:'ingreso',sub:i.tipo})),
+    ...egrF.map(e=>({fecha:e.fecha,desc:e.concepto,monto:e.monto,tipo:'egreso',sub:e.tipo})),
+  ].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+
+  const movRows=movs.map(m=>`
+    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 0;border-bottom:1px solid var(--crema-osc);align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:600">${m.desc}</div>
+        <div style="font-size:11px;color:#555">${fmtFecha(m.fecha)} · ${m.sub}</div>
+      </div>
+      <div style="font-weight:700;font-size:14px;text-align:right;color:${m.tipo==='egreso'?'var(--rojo)':'var(--verde)'}">
+        ${m.tipo==='egreso'?'-':''}${fmt(m.monto)}
+      </div>
+    </div>`).join('')||'<p style="font-size:13px;color:#555">Sin movimientos en este período.</p>';
+
+  const porSocio=state.socios.filter(s=>!s.esDemo).map(s=>{
+    const rs=retConf.filter(r=>r.socioId===s.id);
+    if(!rs.length)return'';
+    const tot=rs.reduce((a,r)=>a+r.aporte.total,0);
+    const gr=rs.reduce((a,r)=>a+r.gramos,0);
+    return `<div class="row" style="padding:8px 0;border-bottom:1px solid var(--crema-osc)">
+      <div>
+        <div style="font-size:13px;font-weight:600">${s.nombre} <span style="font-weight:400;color:#888">#${s.numero}</span></div>
+        <div style="font-size:11px;color:#555">${rs.length} retiros · ${gr}g</div>
+      </div>
+      <span style="font-weight:700;color:var(--verde)">${fmt(tot)}</span>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="row" style="margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <h2 class="sec" style="margin:0">Contable 📊</h2>
+      <select class="form-input" style="width:auto" onchange="state.periodoCont=this.value;renderTab('contable')">
+        <option value="todos" ${periodo==='todos'?'selected':''}>Todo el período</option>
+        <option value="mes" ${periodo==='mes'?'selected':''}>Este mes</option>
+        <option value="año" ${periodo==='año'?'selected':''}>Este año</option>
+      </select>
+    </div>
+    <div class="grid-2">
+      <div class="kpi"><div class="kpi-val" style="font-size:16px">${fmt(totalRetiros+totalIngresos)}</div><div class="kpi-label">Total ingresos</div></div>
+      <div class="kpi" style="border-left-color:var(--rojo)"><div class="kpi-val" style="font-size:16px;color:var(--rojo)">-${fmt(totalEgresos)}</div><div class="kpi-label">Total egresos</div></div>
+      <div class="kpi" style="border-left-color:${saldo>=0?'var(--verde)':'var(--rojo)'}">
+        <div class="kpi-val" style="font-size:16px;color:${saldo>=0?'var(--verde)':'var(--rojo)'}">${fmt(saldo)}</div>
+        <div class="kpi-label">Saldo neto</div>
+      </div>
+      <div class="kpi" style="border-left-color:var(--verde-med)"><div class="kpi-val">${totalGramos}g</div><div class="kpi-label">Gramos entregados</div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <h3 class="sub">Todos los movimientos</h3>${movRows}
+    </div>
+    <div class="card">
+      <h3 class="sub">Aportes por socio</h3>
+      ${porSocio||'<p style="font-size:13px;color:#555">Sin datos.</p>'}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// AJUSTES
+// ═══════════════════════════════════════════
+function renderAjustes() {
+  const c=state.config;
+  return `
+    <h2 class="sec">Configuración ⚙️</h2>
+    <div class="card" style="margin-bottom:12px">
+      <h3 class="sub">Parámetros de cálculo</h3>
+      <div class="form-group"><label class="form-label">Valor por gramo (ARS)</label>
+        <input id="cfg-vg" type="number" class="form-input" value="${c.valorGramo||10000}"></div>
+      <div style="font-size:12px;color:#555;margin-bottom:4px;font-family:sans-serif">Gastos de gestión: <strong>2% fijo</strong> sobre el valor del material.</div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <h3 class="sub">Datos de transferencia</h3>
+      <div class="form-group"><label class="form-label">Banco / Billetera</label>
+        <input id="cfg-banco" class="form-input" value="${c.banco||'Mercado Pago'}"></div>
+      <div class="form-group"><label class="form-label">Alias</label>
+        <input id="cfg-alias" class="form-input" placeholder="ej: savia.cannabis" value="${c.alias||''}"></div>
+      <div class="form-group"><label class="form-label">CVU</label>
+        <input id="cfg-cvu" class="form-input" placeholder="22 dígitos" value="${c.cvu||''}"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <h3 class="sub">WhatsApp de la asociación</h3>
+      <div class="form-group"><label class="form-label">Número (con código de país)</label>
+        <input id="cfg-wa" class="form-input" placeholder="ej: 543434000000" value="${c.whatsapp||''}"></div>
+      <p style="font-size:12px;color:#555;font-family:sans-serif">54 + código de área sin 0 + número, sin espacios.</p>
+    </div>
+    <button class="btn" style="width:100%" onclick="guardarConfig()">Guardar configuración</button>
+    <div id="cfg-ok" class="saved-toast hidden">✓ Configuración guardada</div>`;
+}
+
+function guardarConfig() {
+  state.config={
+    valorGramo:parseFloat(document.getElementById('cfg-vg').value)||10000,
+    banco:document.getElementById('cfg-banco').value.trim(),
+    alias:document.getElementById('cfg-alias').value.trim(),
+    cvu:document.getElementById('cfg-cvu').value.trim(),
+    whatsapp:document.getElementById('cfg-wa').value.trim(),
+  };
+  save('config');
+  const ok=document.getElementById('cfg-ok');
+  ok.classList.remove('hidden');
+  setTimeout(()=>ok.classList.add('hidden'),2500);
+}
+
+// INIT
+renderTab('dashboard');
+</script>
+</body>
+</html>
